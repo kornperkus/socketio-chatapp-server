@@ -33,19 +33,28 @@ io.on("connection", (socket) => {
       ...user,
     };
 
-    io.in(room)
-      .fetchSockets()
-      .then((clients) => {
-        const users = clients.map((client) => client.data);
-        io.to(room).emit("room-updated", users);
-      });
+    updateRoom(room);
   });
 
   socket.on("message", (data) => {
     io.to(data.to).emit("message", data);
   });
 
+  socket.on("leave", (room) => {
+    socket.leave(room);
+    updateRoom(room);
+  });
+
   socket.on("disconnect", () => {
     console.log("Client disconnect: ", socket.id);
   });
+
+  function updateRoom(room) {
+    io.in(room)
+      .fetchSockets()
+      .then((clients) => {
+        const users = clients.map((client) => client.data);
+        io.to(room).emit("room-updated", users);
+      });
+  }
 });
